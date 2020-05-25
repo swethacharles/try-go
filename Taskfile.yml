@@ -1,0 +1,34 @@
+version: "2"
+
+tasks:
+  default:
+    cmds:
+      - task: build
+
+  build:
+    desc: Builds the project
+    cmds:
+      - dep ensure -v
+      - GOOS=linux go build -o bin/hello hello/main.go
+      - GOOS=linux go build -o bin/world world/main.go
+
+  clean:
+    desc: Cleans the project
+    cmds:
+      - rm -rf ./bin ./vendor Gopkg.lock
+
+  dev-deploy:
+    desc: Deploys the project to AWS dev account
+    cmds:
+      - serverless deploy --stage dev --verbose
+
+
+  run-locally:
+    desc: Sets up a localhost server listening on http://localhost:3001/
+    cmds:
+      - task: build
+      - SERVER_TYPE="LOCAL" ./bin/.hello
+
+  invoke:
+    cmds:
+      - serverless invoke -f hello

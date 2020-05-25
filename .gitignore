@@ -1,0 +1,32 @@
+#Created by JetBrain's GoLand
+.idea/
+
+#Created by text editors as a backups
+*~
+
+#Created by MAC OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+#Binary
+bin
+
+#Modules installed by NPM
+node_modules
+
+#Log files created by npm or during debugging
+*.log
+
+#Mocks
+internal/mock
+
+#Serverless
+.serverless
+
+# Go dependencies
+vendor
