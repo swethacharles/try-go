@@ -1,0 +1,79 @@
+resources:
+  Resources:
+    AppSyncApi:
+      Type: "AWS::AppSync::GraphQLApi"
+      Description: "The GraphQL API for the messaging App"
+      Properties:
+        AuthenticationType: "AMAZON_COGNITO_USER_POOLS"
+        Name: Messaging App
+        UserPoolConfig:
+          UserPoolId: 'eu-west-2_VL9CgrVPk'
+          AwsRegion: 'eu-west-2'
+          DefaultAction: "ALLOW"
+    AppSyncSchema:
+      Type: "AWS::AppSync::GraphQLSchema"
+      Properties:
+        ApiId: !GetAtt AppSyncApi.ApiId
+        Definition: |
+          type Message {
+              message: String
+          }
+
+          type Query {
+              getMessages: Message
+          }
+
+          schema {
+              query: Query
+          }
+      AppSyncAllNotesQueryResolver:
+        Type: "AWS::AppSync::Resolver"
+        DependsOn: AppSyncSchema
+        Properties:
+          ApiId: !GetAtt AppSyncApi.ApiId
+          TypeName: Query
+          FieldName: getMessages
+          RequestMappingTemplate: |
+            {
+              "version": "2017-02-28",
+              "operation": "Query",
+              "query": {
+                "expression": "UserId = :id",
+                "expressionValues": {
+                  "field": 'getMessages'
+                  "user_identity": $utils.toJson($context.identity),
+                }
+              }
+            },
+          ResponseMappingTemplate: $util.toJson($context.result)
+      AppSyncDataSource:
+        Type: AWS::AppSync::DataSource
+        Properties:
+          ApiId: !GetAtt AppSyncApi.ApiId
+          LambdaConfig:
+            LambdaFunctionArn: "arn:aws:lambda:eu-west-2:087958517077:function:try-go-swetha-dev-hello"
+          ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
+          Type: 'AWS_LAMBDA'
+      AppSyncServiceRole:
+        Type: AWS::IAM::Role
+        Properties:
+          RoleName: ${self:service}-appSyncRole
+          AssumeRolePolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Principal:
+                  Service:
+                    - appsync.amazonaws.com
+                Action:
+                  - sts:AssumeRole
+          Policies:
+            - PolicyName: ${self:service}-appSyncPolicy
+              PolicyDocument:
+                Version: '2012-10-17'
+                Statement:
+                  - Effect: Allow
+                    Action:
+                      - lambda:invokeFunction
+                    Resource:
+                      - "arn:aws:lambda:eu-west-2:087958517077:function:try-go-swetha-dev-hello"
